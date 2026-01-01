@@ -1,0 +1,623 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Address {
+  id                                        String   @id @db.Uuid
+  createdAt                                 DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt                                 DateTime @default(now()) @db.Timestamptz(6)
+  address_line1                             String   @db.VarChar(255)
+  address_line2                             String?  @db.VarChar(255)
+  address_line3                             String?  @db.VarChar(255)
+  zipcode                                   String   @db.VarChar(255)
+  city                                      String   @db.VarChar(255)
+  state                                     String   @db.VarChar(255)
+  country                                   String   @db.VarChar(255)
+  Guest_Guest_address_idToAddress           Guest?   @relation("Guest_address_idToAddress")
+  Guest_Guest_company_address_idToAddress   Guest[]  @relation("Guest_company_address_idToAddress")
+  Guest_Guest_permanent_address_idToAddress Guest[]  @relation("Guest_permanent_address_idToAddress")
+  Owner                                     Owner?
+  PG                                        PG?
+  Staff                                     Staff?
+}
+
+model Admin {
+  id            String    @id @db.Uuid
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @default(now()) @db.Timestamptz(6)
+  name          String    @db.VarChar(255)
+  email         String?   @unique(map: "Admin_email_unique") @db.VarChar(255)
+  mobile_number String    @unique(map: "Admin_mobile_number_unique") @db.VarChar(255)
+  role          String    @default("ADMIN") @db.VarChar(255)
+  last_login_at DateTime? @db.Timestamptz(6)
+  password      String?   @db.VarChar(255)
+}
+
+model Amenity {
+  id              String   @id @db.Uuid
+  createdAt       DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @db.Timestamptz(6)
+  food            Boolean
+  internet        Boolean
+  television      Boolean
+  washing_machine Boolean
+  refrigerator    Boolean
+  air_conditioned Boolean
+  gym             Boolean
+  swimming_pool   Boolean
+  bike_parking    Boolean
+  car_parking     Boolean
+  PG              PG?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model AuditLog {
+  id                   String   @id @db.Uuid
+  createdAt            DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime @default(now()) @db.Timestamptz(6)
+  action               String
+  entity_type          String   @db.VarChar(255)
+  entity_id            String   @db.VarChar(255)
+  before_state         Json?
+  after_state          Json?
+  changes              Json?
+  owner_id             String?  @db.Uuid
+  staff_id             String?  @db.Uuid
+  ip_address           String   @db.VarChar(255)
+  user_agent           String   @db.VarChar(255)
+  metadata             Json?
+  pg_id                String?  @db.Uuid
+  activity_description String?  @db.VarChar(255)
+  Owner                Owner?   @relation(fields: [owner_id], references: [id], map: "AuditLog_owner_id_foreign")
+  PG                   PG?      @relation(fields: [pg_id], references: [id], map: "AuditLog_pg_id_foreign")
+  Staff                Staff?   @relation(fields: [staff_id], references: [id], map: "AuditLog_staff_id_foreign")
+
+  @@index([action], map: "AuditLog_action_index")
+  @@index([entity_id], map: "AuditLog_entity_id_index")
+  @@index([entity_type], map: "AuditLog_entity_type_index")
+  @@index([owner_id], map: "AuditLog_owner_id_index")
+  @@index([pg_id], map: "AuditLog_pg_id_index")
+  @@index([staff_id], map: "AuditLog_staff_id_index")
+}
+
+model Bed {
+  id                             String   @id @db.Uuid
+  createdAt                      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt                      DateTime @default(now()) @db.Timestamptz(6)
+  is_available                   Boolean  @default(true)
+  bed_number                     Int
+  room_id                        String   @db.Uuid
+  guest_id                       String?  @unique(map: "Bed_guest_id_unique") @db.Uuid
+  current_stay_id                String?  @unique(map: "Bed_current_stay_id_unique") @db.Uuid
+  pg_id                          String   @db.Uuid
+  Stay_Bed_current_stay_idToStay Stay?    @relation("Bed_current_stay_idToStay", fields: [current_stay_id], references: [id], map: "Bed_current_stay_id_foreign")
+  Guest                          Guest?   @relation(fields: [guest_id], references: [id], map: "Bed_guest_id_foreign")
+  PG                             PG       @relation(fields: [pg_id], references: [id], onDelete: NoAction, map: "Bed_pg_id_foreign")
+  Room                           Room     @relation(fields: [room_id], references: [id], onDelete: NoAction, map: "Bed_room_id_foreign")
+  Stay_Stay_bed_idToBed          Stay?    @relation("Stay_bed_idToBed")
+
+  @@unique([room_id, bed_number], map: "Bed_room_id_bed_number_unique")
+  @@index([pg_id], map: "Bed_pg_id_index")
+  @@index([room_id], map: "Bed_room_id_index")
+  @@index([pg_id], map: "bed_idx_pg_id")
+  @@index([pg_id, is_available], map: "bed_pg_available_index")
+  @@index([pg_id], map: "bed_pg_id_index")
+  @@index([room_id], map: "bed_room_id_index")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model Bill {
+  id                   String    @id @db.Uuid
+  createdAt            DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime  @default(now()) @db.Timestamptz(6)
+  bill_number          String    @unique(map: "Bill_bill_number_unique") @db.VarChar(255)
+  bill_date            DateTime  @db.Timestamptz(6)
+  due_date             DateTime  @db.Timestamptz(6)
+  billing_period_start DateTime  @db.Timestamptz(6)
+  billing_period_end   DateTime  @db.Timestamptz(6)
+  type                 String    @default("rent")
+  status               String    @default("pending")
+  base_amount          Int
+  gst_percentage       Int       @default(0)
+  gst_amount           Int       @default(0)
+  late_fee             Int       @default(0)
+  discount             Int       @default(0)
+  total_amount         Int
+  paid_amount          Int       @default(0)
+  outstanding_amount   Int       @default(0)
+  paid_date            DateTime? @db.Timestamptz(6)
+  pdf_url              String?   @db.VarChar(255)
+  notes                String?
+  payment_instructions String?
+  stay_id              String    @db.Uuid
+  pg_id                String    @db.Uuid
+  owner_id             String    @db.Uuid
+  line_items           Json?
+  metadata             Json?
+  Owner                Owner     @relation(fields: [owner_id], references: [id], onDelete: NoAction, map: "Bill_owner_id_foreign")
+  PG                   PG        @relation(fields: [pg_id], references: [id], onDelete: NoAction, map: "Bill_pg_id_foreign")
+  Stay                 Stay      @relation(fields: [stay_id], references: [id], onDelete: NoAction, map: "Bill_stay_id_foreign")
+  Payment              Payment[]
+
+  @@index([bill_date], map: "Bill_bill_date_index")
+  @@index([due_date], map: "Bill_due_date_index")
+  @@index([owner_id], map: "Bill_owner_id_index")
+  @@index([pg_id], map: "Bill_pg_id_index")
+  @@index([status], map: "Bill_status_index")
+  @@index([stay_id], map: "Bill_stay_id_index")
+  @@index([pg_id, bill_date(sort: Desc)], map: "bill_idx_pg_id_bill_date")
+}
+
+model DataMigration {
+  id          String   @id @db.VarChar(255)
+  name        String   @unique(map: "DataMigration_name_unique") @db.VarChar(255)
+  executed_at DateTime @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model Documents {
+  id                  String    @id @db.VarChar(255)
+  createdAt           DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime  @default(now()) @db.Timestamptz(6)
+  guest_id            String    @db.Uuid
+  document_type       String
+  file_name           String    @db.VarChar(255)
+  file_url            String
+  file_size           Int
+  mime_type           String    @db.VarChar(255)
+  verification_status String    @default("PENDING")
+  verified_at         DateTime? @db.Timestamptz(6)
+  verified_by         String?   @db.VarChar(255)
+  rejection_reason    String?   @db.VarChar(255)
+  notes               String?   @db.VarChar(255)
+  Guest               Guest     @relation(fields: [guest_id], references: [id], onDelete: NoAction, map: "Documents_guest_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model Expense {
+  id                   String    @id @db.Uuid
+  createdAt            DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime  @default(now()) @db.Timestamptz(6)
+  category             String
+  status               String    @default("PAID")
+  amount               Decimal   @db.Decimal(10, 2)
+  expense_date         DateTime  @db.Timestamptz(6)
+  due_date             DateTime? @db.Timestamptz(6)
+  is_recurring         Boolean   @default(false)
+  pg_id                String    @db.Uuid
+  owner_id             String    @db.Uuid
+  staff_id             String?   @db.Uuid
+  external_worker_name String?   @db.VarChar(255)
+  description          String?
+  receipt_url          String?   @db.VarChar(255)
+  metadata             Json?
+  notes                String?
+  Owner                Owner     @relation(fields: [owner_id], references: [id], onDelete: NoAction, map: "Expense_owner_id_foreign")
+  PG                   PG        @relation(fields: [pg_id], references: [id], onDelete: NoAction, map: "Expense_pg_id_foreign")
+  Staff                Staff?    @relation(fields: [staff_id], references: [id], map: "Expense_staff_id_foreign")
+
+  @@index([category], map: "Expense_category_index")
+  @@index([due_date], map: "Expense_due_date_index")
+  @@index([expense_date], map: "Expense_expense_date_index")
+  @@index([owner_id], map: "Expense_owner_id_index")
+  @@index([pg_id], map: "Expense_pg_id_index")
+  @@index([staff_id], map: "Expense_staff_id_index")
+  @@index([status], map: "Expense_status_index")
+}
+
+model Floor {
+  id             String   @id @db.Uuid
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @default(now()) @db.Timestamptz(6)
+  floor_number   Int
+  gender_allowed String?  @db.VarChar(255)
+  pg_id          String   @db.Uuid
+  PG             PG       @relation(fields: [pg_id], references: [id], onDelete: NoAction, map: "Floor_pg_id_foreign")
+  Room           Room[]
+
+  @@unique([pg_id, floor_number], map: "Floor_pg_id_floor_number_unique")
+  @@index([pg_id], map: "floor_idx_pg_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model Guest {
+  id                                          String              @id @db.Uuid
+  createdAt                                   DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt                                   DateTime            @default(now()) @db.Timestamptz(6)
+  name                                        String              @db.VarChar(255)
+  email                                       String              @unique(map: "Guest_email_unique") @db.VarChar(255)
+  mobile_number                               String              @unique(map: "Guest_mobile_number_unique") @db.VarChar(255)
+  address_id                                  String?             @unique(map: "Guest_address_id_unique") @db.Uuid
+  pg_id                                       String              @db.Uuid
+  alternate_number                            String?             @db.VarChar(255)
+  id_proof_type                               String?
+  id_proof_number                             String?             @db.VarChar(255)
+  date_of_birth                               DateTime?           @db.Timestamptz(6)
+  gender                                      String?             @db.VarChar(255)
+  blood_group                                 String?             @db.VarChar(255)
+  emergency_contact                           Json?
+  permanent_address_id                        String?             @db.Uuid
+  company_type                                String?             @db.VarChar(255)
+  company_name                                String?             @db.VarChar(255)
+  employee_id                                 String?             @db.VarChar(255)
+  company_address_id                          String?             @db.Uuid
+  kyc_status                                  String              @default("PENDING") @db.VarChar(255)
+  kyc_verified_at                             DateTime?           @db.Timestamptz(6)
+  kyc_verified_by                             String?             @db.VarChar(255)
+  kyc_rejection_reason                        String?             @db.VarChar(255)
+  occupation                                  String?             @db.VarChar(255)
+  purpose_of_stay                             String?             @db.VarChar(255)
+  reference_contact                           Json?
+  Bed                                         Bed?
+  Documents                                   Documents[]
+  Address_Guest_address_idToAddress           Address?            @relation("Guest_address_idToAddress", fields: [address_id], references: [id], map: "Guest_address_id_foreign")
+  Address_Guest_company_address_idToAddress   Address?            @relation("Guest_company_address_idToAddress", fields: [company_address_id], references: [id], map: "Guest_company_address_id_foreign")
+  Address_Guest_permanent_address_idToAddress Address?            @relation("Guest_permanent_address_idToAddress", fields: [permanent_address_id], references: [id], map: "Guest_permanent_address_id_foreign")
+  PG                                          PG                  @relation(fields: [pg_id], references: [id], onDelete: NoAction, map: "Guest_pg_id_foreign")
+  MaintenanceTicket                           MaintenanceTicket[]
+  Stay                                        Stay?
+
+  @@index([kyc_status], map: "Guest_kyc_status_index")
+  @@index([pg_id], map: "Guest_pg_id_index")
+  @@index([pg_id], map: "guest_idx_pg_id")
+  @@index([pg_id], map: "guest_pg_id_index")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model MaintenanceTicket {
+  id               String    @id @db.Uuid
+  createdAt        DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime  @default(now()) @db.Timestamptz(6)
+  title            String    @db.VarChar(255)
+  description      String
+  status           String    @default("OPEN")
+  priority         String    @default("MEDIUM")
+  category         String    @default("OTHER")
+  guest_id         String    @db.Uuid
+  pg_id            String    @db.Uuid
+  resolved_at      DateTime? @db.Timestamptz(6)
+  resolution_notes String?
+  Guest            Guest     @relation(fields: [guest_id], references: [id], onDelete: NoAction, map: "MaintenanceTicket_guest_id_foreign")
+  PG               PG        @relation(fields: [pg_id], references: [id], onDelete: NoAction, map: "MaintenanceTicket_pg_id_foreign")
+
+  @@index([guest_id], map: "MaintenanceTicket_guest_id_index")
+  @@index([pg_id], map: "MaintenanceTicket_pg_id_index")
+  @@index([priority], map: "MaintenanceTicket_priority_index")
+  @@index([resolved_at], map: "MaintenanceTicket_resolved_at_index")
+  @@index([status], map: "MaintenanceTicket_status_index")
+}
+
+model OTP {
+  id         String   @id @db.VarChar(255)
+  identifier String   @db.VarChar(255)
+  code       String   @db.VarChar(255)
+  purpose    String   @default("SIGNUP") @db.VarChar(255)
+  status     String   @default("PENDING") @db.VarChar(255)
+  expires_at DateTime @db.Timestamptz(6)
+  attempts   Int      @default(0)
+  created_at DateTime @db.Timestamptz(6)
+  updated_at DateTime @db.Timestamptz(6)
+
+  @@index([identifier], map: "OTP_identifier_index")
+}
+
+model Owner {
+  id                       String         @id @db.Uuid
+  createdAt                DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt                DateTime       @default(now()) @db.Timestamptz(6)
+  name                     String         @db.VarChar(255)
+  email                    String?        @unique(map: "Owner_email_unique") @db.VarChar(255)
+  password                 String         @db.VarChar(255)
+  mobile_number            String         @unique(map: "Owner_mobile_number_unique") @db.VarChar(255)
+  address_id               String?        @unique(map: "Owner_address_id_unique") @db.Uuid
+  mobile_verified          Boolean
+  email_verified           Boolean?
+  email_verification_token String?        @db.VarChar(255)
+  failed_login_attempts    Int            @default(0)
+  lockout_until            DateTime?      @db.Timestamptz(6)
+  whats_app_credits        Int            @default(0)
+  sms_credits              Int            @default(0)
+  feature_config           Json?
+  refresh_token_hash       String?        @db.VarChar(255)
+  refresh_token_expires_at DateTime?      @db.Timestamptz(6)
+  avatar_url               String?
+  AuditLog                 AuditLog[]
+  Bill                     Bill[]
+  Expense                  Expense[]
+  Address                  Address?       @relation(fields: [address_id], references: [id], map: "Owner_address_id_foreign")
+  PG                       PG[]
+  Payment                  Payment[]
+  Staff                    Staff[]
+  Subscription             Subscription?
+  notification             notification[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model PG {
+  id                 String              @id @db.Uuid
+  createdAt          DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime            @default(now()) @db.Timestamptz(6)
+  name               String              @db.VarChar(255)
+  contact_number     String              @db.VarChar(255)
+  address_id         String?             @unique(map: "PG_address_id_unique") @db.Uuid
+  amenity_id         String?             @unique(map: "PG_amenity_id_unique") @db.Uuid
+  owner_id           String              @db.Uuid
+  email_enabled      Boolean             @default(true)
+  sms_enabled        Boolean             @default(false)
+  whatsapp_enabled   Boolean             @default(false)
+  subscription_plan  String              @default("FREE")
+  is_public_listed   Boolean             @default(false)
+  public_description String?
+  marketing_phone    String?             @db.VarChar(255)
+  slug               String?             @unique(map: "PG_slug_unique") @db.VarChar(255)
+  AuditLog           AuditLog[]
+  Bed                Bed[]
+  Bill               Bill[]
+  Expense            Expense[]
+  Floor              Floor[]
+  Guest              Guest[]
+  MaintenanceTicket  MaintenanceTicket[]
+  Address            Address?            @relation(fields: [address_id], references: [id], map: "PG_address_id_foreign")
+  Amenity            Amenity?            @relation(fields: [amenity_id], references: [id], map: "PG_amenity_id_foreign")
+  Owner              Owner               @relation(fields: [owner_id], references: [id], onDelete: NoAction, map: "PG_owner_id_foreign")
+  PGConfig           PGConfig?
+  Room               Room[]
+  RoomType           RoomType[]
+  lead               lead[]
+  maintenance_issue  maintenance_issue[]
+  staff_pgs          staff_pgs[]
+
+  @@index([owner_id], map: "PG_owner_id_index")
+}
+
+model PGConfig {
+  id                    String   @id @db.Uuid
+  createdAt             DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime @default(now()) @db.Timestamptz(6)
+  pg_id                 String   @unique(map: "PGConfig_pg_id_unique") @db.Uuid
+  deposit_options       Json?
+  advance_rent_options  Json?
+  pricing_rules         Json?
+  payment_cycle_options Json?
+  PG                    PG       @relation(fields: [pg_id], references: [id], onDelete: NoAction, map: "PGConfig_pg_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model Payment {
+  id               String    @id @db.Uuid
+  createdAt        DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime  @default(now()) @db.Timestamptz(6)
+  amount           Int
+  payment_date     DateTime  @db.Timestamptz(6)
+  method           String
+  status           String    @default("completed")
+  type             String    @default("rent")
+  transaction_id   String?   @db.VarChar(255)
+  reference_number String?   @db.VarChar(255)
+  notes            String?
+  bill_id          String?   @db.Uuid
+  receipt_number   String?   @db.VarChar(255)
+  refunded_amount  Int?
+  refund_date      DateTime? @db.Timestamptz(6)
+  refund_reason    String?   @db.VarChar(255)
+  stay_id          String    @db.Uuid
+  owner_id         String    @db.Uuid
+  metadata         Json?
+  receipt_url      String?   @db.VarChar(255)
+  Bill             Bill?     @relation(fields: [bill_id], references: [id], map: "Payment_bill_id_foreign")
+  Owner            Owner     @relation(fields: [owner_id], references: [id], onDelete: NoAction, map: "Payment_owner_id_foreign")
+  Stay             Stay      @relation(fields: [stay_id], references: [id], onDelete: NoAction, map: "Payment_stay_id_foreign")
+
+  @@index([bill_id], map: "Payment_bill_id_index")
+  @@index([owner_id], map: "Payment_owner_id_index")
+  @@index([payment_date], map: "Payment_payment_date_index")
+  @@index([reference_number], map: "Payment_reference_number_index")
+  @@index([status], map: "Payment_status_index")
+  @@index([stay_id], map: "Payment_stay_id_index")
+  @@index([transaction_id], map: "Payment_transaction_id_index")
+  @@index([type], map: "Payment_type_index")
+}
+
+model Room {
+  id           String    @id @db.Uuid
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @db.Timestamptz(6)
+  number       String    @db.VarChar(255)
+  block        String    @db.VarChar(255)
+  sharing      Int
+  pg_id        String    @db.Uuid
+  room_type_id String?   @db.Uuid
+  floor_id     String    @db.Uuid
+  Bed          Bed[]
+  Floor        Floor     @relation(fields: [floor_id], references: [id], onDelete: NoAction, map: "Room_floor_id_foreign")
+  PG           PG        @relation(fields: [pg_id], references: [id], onDelete: NoAction, map: "Room_pg_id_foreign")
+  RoomType     RoomType? @relation(fields: [room_type_id], references: [id], map: "Room_room_type_id_foreign")
+
+  @@unique([pg_id, number], map: "Room_pg_id_number_unique")
+  @@index([floor_id], map: "Room_floor_id_index")
+  @@index([pg_id], map: "Room_pg_id_index")
+  @@index([pg_id], map: "room_pg_id_index")
+}
+
+model RoomType {
+  id                 String   @id @db.Uuid
+  createdAt          DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime @default(now()) @db.Timestamptz(6)
+  name               String   @db.VarChar(255)
+  amenities          Json?
+  is_air_conditioned Boolean
+  pg_id              String   @db.Uuid
+  Room               Room[]
+  PG                 PG       @relation(fields: [pg_id], references: [id], onDelete: NoAction, map: "RoomType_pg_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model Staff {
+  id                       String      @id @db.Uuid
+  createdAt                DateTime    @default(now()) @db.Timestamptz(6)
+  updatedAt                DateTime    @default(now()) @db.Timestamptz(6)
+  name                     String      @db.VarChar(255)
+  email                    String      @unique(map: "Staff_email_unique") @db.VarChar(255)
+  password                 String      @db.VarChar(255)
+  mobile_number            String      @unique(map: "Staff_mobile_number_unique") @db.VarChar(255)
+  position                 String      @db.VarChar(255)
+  address_id               String?     @unique(map: "Staff_address_id_unique") @db.Uuid
+  role                     String
+  permissions              Json?
+  owner_id                 String      @db.Uuid
+  failed_login_attempts    Int         @default(0)
+  lockout_until            DateTime?   @db.Timestamptz(6)
+  is_invitation_pending    Boolean     @default(true)
+  invitation_token         String?     @db.VarChar(255)
+  invitation_expires_at    DateTime?   @db.Timestamptz(6)
+  force_password_change    Boolean     @default(false)
+  refresh_token_hash       String?     @db.VarChar(255)
+  refresh_token_expires_at DateTime?   @db.Timestamptz(6)
+  avatar_url               String?
+  AuditLog                 AuditLog[]
+  Expense                  Expense[]
+  Address                  Address?    @relation(fields: [address_id], references: [id], map: "Staff_address_id_foreign")
+  Owner                    Owner       @relation(fields: [owner_id], references: [id], onDelete: NoAction, map: "Staff_owner_id_foreign")
+  staff_pgs                staff_pgs[]
+
+  @@index([owner_id], map: "Staff_owner_id_index")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model Stay {
+  id                            String              @id @db.Uuid
+  createdAt                     DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt                     DateTime            @default(now()) @db.Timestamptz(6)
+  check_in_date                 DateTime            @db.Timestamptz(6)
+  check_out_date                DateTime?           @db.Timestamptz(6)
+  first_payment_date            DateTime            @db.Timestamptz(6)
+  latest_payment_date           DateTime?           @db.Timestamptz(6)
+  guest_id                      String              @unique(map: "Stay_guest_id_unique") @db.Uuid
+  bed_id                        String              @unique(map: "Stay_bed_id_unique") @db.Uuid
+  rent_per_month                Int
+  actual_check_out_date         DateTime?           @db.Timestamptz(6)
+  next_due_date                 DateTime?           @db.Timestamptz(6)
+  status                        String              @default("PENDING")
+  recurring_days_for_payment    Int                 @default(30)
+  security_deposit              Int                 @default(0)
+  advance_rent                  Int                 @default(0)
+  notes                         String?             @db.VarChar(255)
+  total_amount_paid             Int                 @default(0)
+  outstanding_amount            Int                 @default(0)
+  Bed_Bed_current_stay_idToStay Bed?                @relation("Bed_current_stay_idToStay")
+  Bill                          Bill[]
+  Payment                       Payment[]
+  Bed_Stay_bed_idToBed          Bed                 @relation("Stay_bed_idToBed", fields: [bed_id], references: [id], onDelete: NoAction, map: "Stay_bed_id_foreign")
+  Guest                         Guest               @relation(fields: [guest_id], references: [id], onDelete: NoAction, map: "Stay_guest_id_foreign")
+  maintenance_issue             maintenance_issue[]
+  notification                  notification[]
+
+  @@index([bed_id], map: "Stay_bed_id_index")
+  @@index([guest_id], map: "Stay_guest_id_index")
+  @@index([status], map: "Stay_status_index")
+  @@index([guest_id, status], map: "stay_guest_status_index")
+  @@index([next_due_date], map: "stay_next_due_date_index")
+  @@index([status], map: "stay_status_index")
+  @@index([status, next_due_date], map: "stay_status_next_due_date_index")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model Subscription {
+  id             String    @id @db.Uuid
+  createdAt      DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @db.Timestamptz(6)
+  plan_type      String    @default("FREE")
+  status         String    @default("ACTIVE")
+  start_date     DateTime  @db.Timestamptz(6)
+  end_date       DateTime? @db.Timestamptz(6)
+  transaction_id String?   @db.VarChar(255)
+  amount_paid    Int       @default(0)
+  owner_id       String    @unique(map: "Subscription_owner_id_unique") @db.Uuid
+  bed_limit      Int       @default(10)
+  staff_limit    Int       @default(0)
+  billing_cycle  String    @default("YEARLY")
+  Owner          Owner     @relation(fields: [owner_id], references: [id], onDelete: NoAction, map: "Subscription_owner_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model lead {
+  id           String    @id @db.Uuid
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @db.Timestamptz(6)
+  name         String    @db.VarChar(255)
+  phone        String    @db.VarChar(255)
+  pg_id        String    @db.Uuid
+  status       String    @default("NEW")
+  source       String    @default("MARKETPLACE") @db.VarChar(255)
+  move_in_date DateTime? @db.Timestamptz(6)
+  message      String?
+  PG           PG        @relation(fields: [pg_id], references: [id], onDelete: NoAction, map: "lead_pg_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model maintenance_issue {
+  id               String    @id @db.Uuid
+  createdAt        DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime  @default(now()) @db.Timestamptz(6)
+  description      String
+  priority         String    @default("medium")
+  status           String    @default("open")
+  title            String?   @db.VarChar(255)
+  photos           Json?
+  reported_by_id   String    @db.Uuid
+  pg_id            String    @db.Uuid
+  resolved_at      DateTime? @db.Timestamptz(6)
+  resolution_notes String?
+  category         String?   @db.VarChar(255)
+  PG               PG        @relation(fields: [pg_id], references: [id], onDelete: NoAction, map: "maintenance_issue_pg_id_foreign")
+  Stay             Stay      @relation(fields: [reported_by_id], references: [id], onDelete: NoAction, map: "maintenance_issue_reported_by_id_foreign")
+}
+
+model mikro_orm_migrations {
+  id          Int       @id @default(autoincrement())
+  name        String?   @db.VarChar(255)
+  executed_at DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model notification {
+  id             String    @id @db.Uuid
+  createdAt      DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @db.Timestamptz(6)
+  type           String
+  channel        String
+  status         String    @default("pending")
+  recipient      String    @db.VarChar(255)
+  recipient_name String?   @db.VarChar(255)
+  content        String
+  subject        String?   @db.VarChar(255)
+  stay_id        String?   @db.Uuid
+  owner_id       String    @db.Uuid
+  sent_at        DateTime? @db.Timestamptz(6)
+  delivered_at   DateTime? @db.Timestamptz(6)
+  failure_reason String?   @db.VarChar(255)
+  metadata       Json?
+  Owner          Owner     @relation(fields: [owner_id], references: [id], onDelete: NoAction, map: "notification_owner_id_foreign")
+  Stay           Stay?     @relation(fields: [stay_id], references: [id], map: "notification_stay_id_foreign")
+
+  @@index([delivered_at], map: "notification_delivered_at_index")
+  @@index([owner_id], map: "notification_owner_id_index")
+  @@index([recipient], map: "notification_recipient_index")
+  @@index([sent_at], map: "notification_sent_at_index")
+  @@index([status], map: "notification_status_index")
+  @@index([stay_id], map: "notification_stay_id_index")
+}
+
+model staff_pgs {
+  staff_id String @db.Uuid
+  pg_id    String @db.Uuid
+  PG       PG     @relation(fields: [pg_id], references: [id], onDelete: Cascade, map: "staff_pgs_pg_id_foreign")
+  Staff    Staff  @relation(fields: [staff_id], references: [id], onDelete: Cascade, map: "staff_pgs_staff_id_foreign")
+
+  @@id([staff_id, pg_id])
+}
