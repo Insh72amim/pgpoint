@@ -83,7 +83,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     <div className="min-h-screen bg-gray-50">
        <nav className="bg-white shadow-sm sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-             <Link href="/" className="text-xl font-bold text-blue-900">MyPG</Link>
+             <Link href="/" className="text-xl font-bold text-blue-900">PGPoint</Link>
              <div className="hidden md:block w-96">
                 <SearchBar />
              </div>

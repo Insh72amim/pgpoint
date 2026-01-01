@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: PageProps) {
   if (!pg) return { title: 'PG Not Found' };
 
   return {
-    title: `${pg.name} - PG in ${pg.Address?.city || 'India'} | MyPG`,
+    title: `${pg.name} - PG in ${pg.Address?.city || 'India'} | PGPoint`,
     description: pg.public_description || `Affordable PG accommodation in ${pg.Address?.city}. Book your stay at ${pg.name} today.`,
   };
 }
@@ -61,7 +61,7 @@ export default async function PGListingPage({ params }: PageProps) {
       {/* Navbar Placeholder */}
       <nav className="bg-white shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-             <Link href="/" className="text-xl font-bold text-blue-900">MyPG</Link>
+             <Link href="/" className="text-xl font-bold text-blue-900">PGPoint</Link>
              <Link href="/search" className="text-sm font-medium text-gray-500 hover:text-blue-600">Browse All</Link>
           </div>
        </nav>
