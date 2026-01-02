@@ -9,11 +9,12 @@ import Image from 'next/image';
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 // SEO Metadata
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata(props: PageProps) {
+  const params = await props.params;
   const pg = await prisma.pG.findFirst({
     where: { 
         OR: [
@@ -33,7 +34,8 @@ export async function generateMetadata({ params }: PageProps) {
   };
 }
 
-export default async function PGListingPage({ params }: PageProps) {
+export default async function PGListingPage(props: PageProps) {
+  const params = await props.params;
   const pg = await prisma.pG.findFirst({
     where: { 
         OR: [
