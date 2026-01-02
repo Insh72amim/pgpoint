@@ -359,6 +359,8 @@ model PG {
   images             Json?
   cover_image        String?             @db.VarChar(255)
   location           Json?
+  min_rent           Int?
+  max_rent           Int?
   AuditLog           AuditLog[]
   Bed                Bed[]
   Bill               Bill[]
