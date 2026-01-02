@@ -45,3 +45,5 @@ next-env.d.ts
 
 ## Remove it once migrate to VM GCP
 /.github/**
+
+/logs

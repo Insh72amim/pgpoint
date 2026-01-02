@@ -356,6 +356,9 @@ model PG {
   public_description String?
   marketing_phone    String?             @db.VarChar(255)
   slug               String?             @unique(map: "PG_slug_unique") @db.VarChar(255)
+  images             Json?
+  cover_image        String?             @db.VarChar(255)
+  location           Json?
   AuditLog           AuditLog[]
   Bed                Bed[]
   Bill               Bill[]
@@ -453,6 +456,7 @@ model RoomType {
   amenities          Json?
   is_air_conditioned Boolean
   pg_id              String   @db.Uuid
+  images             Json?
   Room               Room[]
   PG                 PG       @relation(fields: [pg_id], references: [id], onDelete: NoAction, map: "RoomType_pg_id_foreign")
 }

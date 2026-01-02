@@ -32,19 +32,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     include: {
       Address: true,
       Amenity: true,
-      RoomType: {
-         include: {
-             // to find min price calculate from pricing rules or just raw logic?
-             // schema has pricing_rules in PGConfig, not here directly?
-             // Wait, schema has PGConfig with pricing_rules (JSON).
-             // or we can estimate from somewhere else?
-             // Actually, schema.prisma check: RoomType doesn't have price. PGConfig has pricing_rules.
-             // But Stay has rent_per_month.
-             // For listing, we usually need a "starting from" price.
-             // If pricing_rules is JSON, we can't easily sort/filter by it in SQL/Prisma easily without raw query or extracting.
-             // For MVP, if price is hard to get, we show 'Contact for Price' or parse JSON in JS.
-         }
-      },
+      RoomType: true,
       PGConfig: true
     }
   });
@@ -62,6 +50,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
              if (prices.length > 0) minRent = Math.min(...prices as number[]);
           } catch (e) { console.error('Error parsing pricing rules', e); }
       }
+      
+      // Determine Image URL
+      let imageUrl = pg.cover_image;
+      if (!imageUrl && pg.images && Array.isArray(pg.images) && pg.images.length > 0) {
+          imageUrl = pg.images[0];
+      }
 
       return {
           id: pg.id,
@@ -75,7 +69,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             powerBackup: false, // Schema doesn't have it explicitly
           },
           genderType: 'Co-ed', // Need to derive from Floor/Room logic or add to PG entity. For now Mock.
-          imageUrl: undefined // No image in schema yet for PG main image? Schema check needed.
+          imageUrl,
       };
   });
 
